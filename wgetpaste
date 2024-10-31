@@ -344,6 +344,10 @@ requiredarg() {
 	((args++))
 }
 
+notplaintext() {
+	die "The input source: \"$1\" is not a plain text file."
+}
+
 notreadable() {
 	die "The input source: \"$1\" is not readable. Please specify a readable input source."
 }
@@ -534,7 +538,7 @@ x_cut() {
 ### output
 usage() {
 	cat <<EOF
-Usage: $0 [options] [file[s]]
+Usage: $0 [options] [uncompressed text file[s]]
 
 Options:
     -l, --language LANG           set language (defaults to "$DEFAULT_LANGUAGE")
@@ -1016,6 +1020,9 @@ case "$SOURCE" in
 	files )
 	if [[ ${#FILES[@]} -gt 1 ]]; then
 		for f in "${FILES[@]}"; do
+			if ! file "${f}" | grep -q 'ASCII'; then
+				notplaintext "${f}"
+			fi
 			[[ -r $f ]] || notreadable "$f"
 			if [[ $TEE ]]; then
 				echo "$PS1 cat $f$N$(strip_ansi "$f")$N" | tee -a "$TMPF"
